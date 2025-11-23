@@ -59,6 +59,18 @@ with st.sidebar:
 
     st.image("微信图片_20251123203603_26_25.jpg", width=100) 
     st.image("微信图片_20251123203604_27_25.jpg", width=100) 
+    st.markdown(
+        '''
+        <div style="line-height:1.1; font-size:14px;">
+          <strong>Kangmin Yu</strong><br>
+          <a href="mailto:kangmin.yu@efrei.net">kangmin.yu@efrei.net</a>
+          <div style="height:6px;"></div>
+          <strong>Mano Joseph Mathew</strong><br>
+          <a href="mailto:mano.mathew@efrei.fr">mano.mathew@efrei.fr</a>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
     st.markdown("---")
     
     st.title("Data Filters")
@@ -80,13 +92,7 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.markdown(
-        """
-        #EFREIDataStoriesWUT2025  
-        **Kangmin Yu** | kangmin.yu@efrei.net
-        """
-    )
-
+    
 df_filtered = df_data[
     (df_data['accident_severity'].isin(selected_severity)) &
     (df_data['area_accident_occured'].isin(selected_areas))
@@ -353,6 +359,49 @@ with col2:
         tooltip=['age_band_of_driver', 'driving_experience', 'Severe_Count']
     ).properties(title="Driving Experience vs. Age Band Severe Accident")
     draw_chart(chart, "Driver Age, Experience, and Severe Accident")
+
+st.markdown("---")
+
+# === Data Quality & Missingness Report ===
+st.header("Data Quality & Missingness Report")
+st.info("Summary of missing values, duplicates, and simple validation checks. Review before using the analysis results.")
+
+# Missing values per column
+missing = df_data.isna().sum().reset_index()
+missing.columns = ['column', 'missing_count']
+missing['missing_pct'] = (missing['missing_count'] / len(df_data) * 100).round(2)
+missing = missing.sort_values('missing_pct', ascending=False)
+
+st.subheader("Missing Values by Column")
+st.write(f"Total rows: {len(df_data):,}")
+st.table(missing)
+
+# Show a compact bar chart of top columns with missingness
+top_missing = missing[missing['missing_count'] > 0].head(20)
+if not top_missing.empty:
+    chart = alt.Chart(top_missing).mark_bar(color='#CC6666').encode(
+        x=alt.X('missing_pct:Q', title='Missing %'),
+        y=alt.Y('column:N', sort=alt.SortField('missing_pct', order='descending')),
+        tooltip=[alt.Tooltip('missing_count:Q', title='Missing count'), alt.Tooltip('missing_pct:Q', title='Missing %')]
+    ).properties(height=400)
+    draw_chart(chart, "Top Columns by Missing Percentage")
+else:
+    st.success("No missing values detected in the dataset.")
+
+# Duplicate rows check
+dup_count = df_data.duplicated().sum()
+st.subheader("Duplicate Rows")
+st.write(f"Duplicate rows detected: {dup_count}")
+if dup_count > 0:
+    st.write("Preview of duplicate rows:")
+    st.dataframe(df_data[df_data.duplicated()].head(5))
+
+# Simple row-level missingness distribution (how many rows have N missing cols)
+st.subheader("Row-level Missingness Distribution")
+row_missing = df_data.isna().sum(axis=1).value_counts().reset_index()
+row_missing.columns = ['missing_cols_count', 'row_count']
+row_missing = row_missing.sort_values('missing_cols_count')
+st.bar_chart(row_missing.set_index('missing_cols_count'))
 
 st.markdown("---")
 
