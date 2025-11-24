@@ -116,6 +116,9 @@ with st.sidebar:
         unsafe_allow_html=True
     )
     st.markdown("---")
+    st.markdown("**Course: Data Visualization 2025**")
+    st.markdown("**Prof. Mano Mathew**")
+    st.markdown("[Check out this LinkedIn](https://www.linkedin.com/in/manomathew/)", unsafe_allow_html=True)
     
     st.title("数据筛选器")
     
